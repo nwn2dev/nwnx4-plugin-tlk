@@ -152,7 +152,6 @@ dependencies = [
 [[package]]
 name = "nwn-lib-rs"
 version = "0.1.0"
-source = "git+https://gitlab.com/CromFr/nwn-lib-rs.git?branch=main#dcce6b01d1622695cf7caecfe1a704db2a11e07a"
 dependencies = [
  "nom",
 ]
