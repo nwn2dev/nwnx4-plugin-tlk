@@ -1,6 +1,11 @@
 
 // Loads a TLK resolver using two TLK paths (either absolute paths or relative to the NWN2 install path)
 //
+// The sBaseTlkPath, sUserTlkPath variables can contain tokens, that will be replaced with useful paths:
+// - ${NWNX}     Path to the NWNX4 install dir
+// - ${NWN2INST} Path to the NWN2 install dir
+// - ${NWN2HOME} Path to the home folder, i.e. "Documents/Neverwinter Nights 2"
+//
 // sResolverName: Custom name for the resolver
 // sBaseTlkPath: Path to the TLK file that will be used for strrefs lower than 16_777_216
 // sUserTlkPath: Path to the TLK file that will be used for strrefs higher than 16_777_216. Set to "" if you don't have a user TLK file
