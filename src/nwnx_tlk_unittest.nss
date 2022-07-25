@@ -28,7 +28,7 @@ void AssertEqF(float fA, float fB, float fPrecision, string sScript, int nLine, 
 
 void main()
 {
-	Assert(TLKLoadResolver("stock", "${NWN2HOME}/test/dialog.tlk", ""), __FILE__, __LINE__);
+	Assert(TLKLoadResolver("stock", "${NWN2HOME}/test/dialog.tlk"), __FILE__, __LINE__);
 	Assert(TLKIsResolverLoaded("stock"), __FILE__, __LINE__);
 	AssertEqI(TLKGetTalkTableLanguage("stock", 0), LANGUAGE_FRENCH, __FILE__, __LINE__);
 	AssertEqI(TLKGetTalkTableLanguage("stock", 1), 0, __FILE__, __LINE__);

@@ -1,0 +1,88 @@
+name: Build
+on: [push, pull_request]
+
+env:
+  release_file_name: nwnx4-plugin-tlk
+  artifact_name: xp_tlk-${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "${{ hashFiles('Cargo.lock') }}"
+
+      - name: Install / configure compiler
+        shell: bash
+        run: |
+          echo "Install nightly"
+          rustup toolchain install nightly
+          sync
+          echo "Set default toolchain"
+          rustup default nightly
+          sync
+          echo "Add 32bit target"
+          rustup target add i686-pc-windows-msvc
+
+      - name: Build project
+        run: cargo build --release
+
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          mkdir -p out/{plugins,nwscript}/
+
+          cp target/i686-pc-windows-msvc/release/xp_tlk.{dll,pdb} out/plugins/
+          cp src/nwnx_tlk.nss                                     out/nwscript/
+          cp README.md                                            out/xp_tlk.readme.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          path: out/*
+          name: ${{env.artifact_name}}
+
+  release:
+    name: Create release if tagged
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{env.artifact_name}}
+          path: ${{env.release_file_name}}/
+
+      - name: Compress release
+        run: |
+          zip -r ${{env.release_file_name}}.zip ${{env.release_file_name}}/
+
+      - name: Extract release info
+        shell: bash
+        id: rel_info
+        run: |
+          TAG=$(echo '${{ github.ref }}' | grep -oE '\bv[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$' || true)
+          echo "::set-output name=tag::$TAG"
+
+          [[ "$TAG" =~ -rc[0-9]+$ ]] && PRERELEASE=true || PRERELEASE=false
+          echo "::set-output name=prerelease::$PRERELEASE"
+
+          if [[ "$TAG" != "" ]]; then
+            echo "Deploying $TAG (prerelease=$PRERELEASE)"
+          else
+            echo "Not a tagged release"
+          fi
+
+      - name: Create draft release with artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ steps.rel_info.outputs.tag }}
+          prerelease: ${{ steps.rel_info.outputs.prerelease }}
+          files: ${{env.release_file_name}}.zip
+          draft: true
