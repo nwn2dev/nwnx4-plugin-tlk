@@ -1,8 +1,6 @@
 #![allow(dead_code, non_snake_case)]
 #![allow(unused_imports)]
 
-mod cplugin;
-
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::error::Error;
@@ -15,6 +13,13 @@ use std::path::PathBuf;
 use std::slice;
 
 use nwn_lib_rs::tlk;
+use nwnx4_lib_cplugin_rs::{cplugin_hook, CPlugin, InitInfo};
+
+// Implement the nwnx4 CPlugin ABI and forward to the XPTlk class
+cplugin_hook!(
+    XPTlk,
+    [get_id, get_info, get_version, get_int, get_float, get_str]
+);
 
 use flexi_logger::{FileSpec, LogSpecification, Logger};
 #[allow(unused_imports)]
@@ -38,7 +43,7 @@ impl Error for NWNXError {
 #[derive(Default)]
 struct XPTlk {
     resolvers: HashMap<String, tlk::Resolver>,
-    nwnx_path: String,
+    nwnx_user_path: String,
     nwn2_install_path: String,
     nwn2_home_path: String,
 }
@@ -98,7 +103,7 @@ impl XPTlk {
 
     fn replace_path_tokens(&self, path: &str) -> String {
         path.to_string()
-            .replace("${NWNX}", &self.nwnx_path)
+            .replace("${NWNX}", &self.nwnx_user_path)
             .replace("${NWN2INST}", &self.nwn2_install_path)
             .replace("${NWN2HOME}", &self.nwn2_home_path)
     }
@@ -132,9 +137,9 @@ impl XPTlk {
     }
 }
 
-impl<'a> crate::cplugin::CPlugin<'a> for XPTlk {
-    fn new(info: crate::cplugin::InitInfo) -> Result<Self, Box<dyn Error>> {
-        let log_path: PathBuf = [info.nwnx_path, "xp_tlk.txt"].iter().collect();
+impl<'a> CPlugin<'a> for XPTlk {
+    fn new(info: InitInfo) -> Result<Self, Box<dyn Error>> {
+        let log_path: PathBuf = [info.nwnx_user_path, "xp_tlk.txt"].iter().collect();
 
         Logger::try_with_env_or_str("trace")
             .unwrap_or(Logger::with(LogSpecification::info()))
@@ -144,7 +149,7 @@ impl<'a> crate::cplugin::CPlugin<'a> for XPTlk {
 
         Ok(Self {
             resolvers: HashMap::new(),
-            nwnx_path: info.nwnx_path.to_string(),
+            nwnx_user_path: info.nwnx_user_path.to_string(),
             nwn2_install_path: info.nwn2_install_path.to_string(),
             nwn2_home_path: info.nwn2_home_path.to_string(),
         })
@@ -316,9 +321,3 @@ impl<'a> crate::cplugin::CPlugin<'a> for XPTlk {
         }
     }
 }
-
-// Implement the nwnx4 CPlugin ABI and forward to the XPTlk class
-cplugin_hook!(
-    XPTlk,
-    [GetID, GetInfo, GetVersion, GetInt, GetFloat, GetString]
-);

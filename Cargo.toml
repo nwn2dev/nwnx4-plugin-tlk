@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 [dependencies]
 # nwn-lib-rs = { path = "../nwn-lib-rs" }
 nwn-lib-rs = { git = "https://gitlab.com/CromFr/nwn-lib-rs.git", branch = "main" }
+nwnx4-lib-cplugin-rs = { git = "https://github.com/nwn2dev/nwnx4-lib-cplugin-rs.git" }
 git-version = "0.3.5"
 log = "0.4.17"
 flexi_logger = "0.22.5"
